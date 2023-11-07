@@ -1,0 +1,54 @@
+{
+  "name": "amis-yao-viewer",
+  "displayName": "amis-yao-viewer",
+  "description": "amis vscode plugin",
+  "publisher": "amis-yao-viewer",
+  "version": "0.0.2",
+  "engines": {
+    "vscode": "^1.54.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:amis.json",
+    "onCommand:amis-yao-viewer.amis"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "amis-yao-viewer.amis",
+        "title": "AMIS-YAO"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "AMIS-YAO",
+        "properties": {
+          "AMIS.assets_url": {
+            "type": "string",
+            "default": null,
+            "description": "type your amis-sdk url"
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "node ./test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.54.0",
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.4",
+    "@types/node": "^12.11.7",
+    "eslint": "^7.19.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.2.1",
+    "typescript": "^4.1.3",
+    "vscode-test": "^1.5.0"
+  }
+}
