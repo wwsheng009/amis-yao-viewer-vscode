@@ -168,7 +168,6 @@ function getWebViewContent(url, headers, schema, params) {
           html,
           body,
           .app-wrapper {
-              font: 12px/22px "微软雅黑", Arial, sans-serif;
               min-height: 100vh;
               position: relative;
               width: 100%;
@@ -233,8 +232,6 @@ function getWebViewContent(url, headers, schema, params) {
                         });
                       };
                       const check = (response) => {
-                          debugger;
-                          console.log("response",response)
 
                           //判断返回结构是否已经是amis结构
                           if (
@@ -263,8 +260,6 @@ function getWebViewContent(url, headers, schema, params) {
                               msg: response.data.message ? response.data.message : "处理成功",
                               data: response.data,
                           };
-                          console.log("new payload:",payload)
-  
                           response.data = payload;
                           // 在这个回调函数中返回一个新的 Promise 对象
                           return new Promise(function (resolve, reject) {
