@@ -156,156 +156,161 @@ function getWebViewContent(url, headers, schema, params) {
     themeCSS = '<link rel="stylesheet" href="' + assetsPath + '/dark.css" />';
   }
   var str = `
-	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-		<title>AMIS preview</title>
-		<style>
-			html,body {font: 12px/22px "微软雅黑", Arial, sans-serif; min-height: 100vh;}
-			html {
-			color: #666;
-			-ms-text-size-adjust: 100%;
-			-webkit-text-size-adjust: 100%;
-			}
-		</style>
-		<link rel="stylesheet" href="${assetsPath}/sdk.css" />
-		${themeCSS}
-	</head>
-	<body>
-		<div id="amis-container"></div>
-	</body>
-	</html>
-	<script src="${assetsPath}/sdk.js"></script>
-	<script type="text/javascript">
-		var Ajax = function(type, url, data, headers, async){
-			// 异步对象
-			var ajax;		
-			window.XMLHttpRequest ? ajax =new XMLHttpRequest() : ajax=new ActiveXObject("Microsoft.XMLHTTP");
-			!type ? type = "get" : type = type;
-			!data ? data = {} : data = data;
-			async != false ? !async ? async = true : async = async : '';
-			return new Promise(function(resolve,reject){
-				// get 跟post  需要分别写不同的代码
-				if (type.toUpperCase()=== "GET") 
-				{// get请求
-					if (data) {// 如果有值
-						url += '?';										
-						if( typeof data === 'object' )
-						{ // 如果有值 从send发送
-							var convertResult = "" ;
-							for(var c in data){
-								convertResult += c + "=" + data[c] + "&";
-							}						
-							url += convertResult.substring(0,convertResult.length-1);
-						}
-						else
-						{
-							url += data;
-						}
-					}
-					ajax.open(type, url, async); // 设置 方法 以及 url
-          ajax.withCredentials = false;
+  <!DOCTYPE html>
+  <html lang="en">
+  
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+      <title>AMIS Page preview</title>
+      <style>
+          html,
+          body,
+          .app-wrapper {
+              font: 12px/22px "微软雅黑", Arial, sans-serif;
+              min-height: 100vh;
+              position: relative;
+              width: 100%;
+              height: 100%;
+              margin: 0;
+              padding: 0;
+          }
+  
+          html {
+              color: #666;
+              -ms-text-size-adjust: 100%;
+              -webkit-text-size-adjust: 100%;
+          }
+      </style>
+      <link rel="stylesheet" href="${assetsPath}/sdk.css" />
+      ${themeCSS}
+  </head>
+  
+  <body>
+      <div id="amis-container"></div>
+  </body>
+  
+  </html>
+  <script src="${assetsPath}/sdk.js"></script>
+  <script type="text/javascript">
+  
+      (function () {
+          let amis = amisRequire('amis/embed');
+          const match = amisRequire('path-to-regexp').match;
+          const axios = amisRequire('axios')
+  
+          function initAmis() {
+              return {
+                  fetcher: function ({ url, method, data, config, headers }) {
+                      config = config || {};
+                      config.headers = config.headers || headers || {};
+                      config.headers = Object.assign({},config.headers,${headers})
+                      config.withCredentials = true;
+                      const catcherr = (error) => {
+                          if (error.response) {
+                            if (error.response?.data && error.response?.data?.message) {
+                                error.message = error.response?.data?.message;
+                            }
+                            if (
+                                error.response.data?.code === 403 ||
+                                error.response.data?.code === 402
+                            ) {
+                              console.log("用户认证失败，请更新配置文件中的Header配置")
+                            }
+                            if (error.response.data.message === "Invalid token") {
+                              console.log("Invalid token，请更新配置文件中的Header配置")
+                            }
+                        } else if (error.request) {
+                            console.log(error.request);
+                        } else {
+                            // Something happened in setting up the request that triggered an Error
+                            console.log('Error', error.message);
+                        }
 
-					for(var key in headers) {
-						ajax.setRequestHeader(key,headers[key])
-					}
-					ajax.send(null);// send即可
-				} else if(type.toUpperCase()=== "POST") {// post请求
-					ajax.open(type, url); // post请求 url 是不需要改变
-					for(var key in headers) {
-						ajax.setRequestHeader(key,headers[key])
-					}
-					ajax.setRequestHeader("Content-type","application/json"); // 需要设置请求报文
-					if(data) { 
-						typeof data === 'object' ? ajax.send(JSON.stringify(data)) : ajax.send(data)
-					} else {
-						ajax.send(); // 木有值 直接发送即可
-					}
-				}
-				// 注册事件
-				ajax.onreadystatechange = function () {
-					// 在事件中 获取数据 并修改界面显示
-					if (ajax.readyState == 4){
-						if(ajax.status===200){ // 返回值： ajax.responseText;
-							if(ajax.response && typeof ajax.response != 'object'){
-								resolve(JSON.parse(ajax.response));							
-							}
-							else{
-								resolve(ajax.response);
-							}
-						}else{
-							reject(ajax.status);
-						}
-					}
-				}
-			});		
-		}
-		function responseAdpater(response,request){
-			// console.log("request:",request)
-      // debugger;
+                        return new Promise(function (resolve, reject) {
+                            reject(error);
+                        });
+                      };
+                      const check = (response) => {
+                          debugger;
+                          console.log("response",response)
 
-      const path = request.url;
-
-			if (!path.startsWith("/api")) {
-				return response;
-			}
-
-			if (
-				typeof response === "object" &&
-				response !== null &&
-				"data" in response &&
-				"msg" in response &&
-				"status" in response
-			  ) {
-				return response;
-			}
-      
-			let payload = {
-				status: !response.code ? 0 : response.code,
-				msg: response.message ? response.message : "处理成功",
-				data: response,
-			  };
-		  
-			response = payload;
-
-			return response;
-		}
-		function initAmis(){
-			return {
-				fetcher: function(obj){
-					var method = obj.method
-					var headers = obj.headers || {}
-					var url = "${url}" + obj.url
-					var config = obj.config
-					var data = obj.data
-					headers = Object.assign({},headers,${headers})
-					return Ajax(method,url,data,headers).then(res=>{
-						return responseAdpater(res,obj)
-					})
-				},
-				jumpTo: function(to,action){
-					var blank = false
-					if (action && action.actionType === 'url') {
-						blank = action.blank    
-					}
-					location.href = to
-				},
-				updateLocation:function(to,replace){
-					location.href = to
-				},
-			}
-		}
-    (function(){
-      var amis = amisRequire('amis/embed');
-      var options = initAmis();
-      // console.log("options:",options);
-      var amisScope = amis.embed('#amis-container', ${schema}, ${params},options);
-    })()
-		
-	</script>`;
+                          //判断返回结构是否已经是amis结构
+                          if (
+                              typeof response.data === "object" &&
+                              response.data !== null &&
+                              "data" in response.data &&
+                              "msg" in response.data &&
+                              "status" in response.data
+                          ) {
+                              return new Promise(function (resolve, reject) {
+                                  resolve(response);
+                              });
+                          }
+                          // 
+                          const path = url;
+  
+                          if (!path.startsWith("/api")) {
+                              return new Promise(function (resolve, reject) {
+                                  resolve(response);
+                              });
+                          }
+                          // debugger;
+                          //组成新的payload,即是修改response的数据
+                          let payload = {
+                              status: !response.data.code ? 0 : response.data.code,
+                              msg: response.data.message ? response.data.message : "处理成功",
+                              data: response.data,
+                          };
+                          console.log("new payload:",payload)
+  
+                          response.data = payload;
+                          // 在这个回调函数中返回一个新的 Promise 对象
+                          return new Promise(function (resolve, reject) {
+                              // 这里应该返回一个新的response,可以在下一个adapter里使用
+                              // 执行异步操作
+                              // 在异步操作完成后调用 resolve 或 reject
+                              resolve(response);
+                          });
+                      };
+                      let fllurl = "${url}" + url;
+                      if (method !== "post" && method !== "put" && method !== "patch") {
+                          if (data) {
+                              config.params = data;
+                          }
+                          return axios[method](fllurl, config).then(check).catch(catcherr);
+                      } else if (data && data instanceof FormData) {
+                          // config.headers = config.headers || {};
+                          // config.headers['Content-Type'] = 'multipart/form-data';
+                      } else if (
+                          data &&
+                          typeof data !== "string" &&
+                          !(data instanceof Blob) &&
+                          !(data instanceof ArrayBuffer)
+                      ) {
+                          // data = JSON.stringify(data);
+                          config.headers["Content-Type"] = "application/json";
+                      }
+                      return axios[method](fllurl, data, config).then(check).catch(catcherr);
+                  },
+                  jumpTo: function (to, action) {
+                      var blank = false
+                      if (action && action.actionType === 'url') {
+                          blank = action.blank
+                      }
+                      location.href = to
+                  },
+                  updateLocation: function (to, replace) {
+                      location.href = to
+                  },
+              }
+          };
+          var options = initAmis();
+          // console.log("options:",options);
+          var amisScope = amis.embed('#amis-container', ${schema}, ${params}, options);
+      })()
+  </script>`;
   return str;
 }
 
